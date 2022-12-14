@@ -1,49 +1,52 @@
-import { Component } from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { HiOutlineXCircle } from 'react-icons/hi2';
 import css from './Modal.module.css';
 
 const ESCAPE_KEY = 'Escape';
 
-export default class Modal extends Component {
-  static propTypes = {
-    largeImage: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    onClose: PropTypes.func.isRequired,
-  };
+export default function Modal({ largeImage, description, onClose }) {
+  useEffect(() => {
+    console.log('it`s useEffect()');
+    window.addEventListener('keydown', closeModal);
+  }, []);
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.closeModal);
-  }
+  // useEffect(() => {
+  //   return window.removeEventListener('keydown', closeModal);
+  // });
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.closeModal);
-  }
-
-  closeModal = event => {
+  const closeModal = event => {
+    console.log('event: ', event);
+    console.log('event.code: ', event.code);
     if (event.currentTarget === event.target || event.code === ESCAPE_KEY) {
       event.preventDefault();
-      this.props.onClose();
+      console.log('it`s condition in event');
+      window.removeEventListener('keydown', closeModal);
+      onClose();
     }
   };
 
-  render() {
-    return (
-      <div className={css.overlay} onClick={this.closeModal}>
-        <HiOutlineXCircle
-          color="white"
-          size="2em"
-          style={{
-            position: 'absolute',
-            top: '40px',
-            right: '40px',
-            pointerEvents: 'none',
-          }}
-        />
-        <div className={css.modal}>
-          <img src={this.props.largeImage} alt={this.props.description} />
-        </div>
+  return (
+    <div className={css.overlay} onClick={closeModal}>
+      <HiOutlineXCircle
+        color="white"
+        size="2em"
+        style={{
+          position: 'absolute',
+          top: '40px',
+          right: '40px',
+          pointerEvents: 'none',
+        }}
+      />
+      <div className={css.modal}>
+        <img src={largeImage} alt={description} />
       </div>
-    );
-  }
+    </div>
+  );
 }
+
+Modal.propTypes = {
+  largeImage: PropTypes.string,
+  description: PropTypes.string,
+  onClose: PropTypes.func,
+};
