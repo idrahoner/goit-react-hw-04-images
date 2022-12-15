@@ -27,7 +27,7 @@ export function App() {
       }}
     >
       <Searchbar onSubmit={handleSearch} status={status} />
-      <GalleryViewer query={query} getStatus={getStatus} />
+      <GalleryViewer query={query} getStatus={getStatus} status={status} />
       <ToastContainer autoClose={3000} />
     </div>
   );

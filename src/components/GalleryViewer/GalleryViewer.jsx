@@ -7,12 +7,19 @@ import ImageGallery from 'components/ImageGallery';
 import Button from 'components/Button';
 import { fetchImages, formatResponse } from 'service';
 
-export default function GalleryViewer({ query, getStatus }) {
+export default function GalleryViewer({ query, getStatus, status }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [hits, setHits] = useState([]);
   const [totalHits, setTotalHits] = useState(0);
-  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (page === 1 && totalHits) {
+      toast.success(`Hooray! We found ${totalHits} images.`);
+    } else if (hits.length === totalHits && totalHits) {
+      toast.info("We're sorry, but you've reached the end of search results.");
+    }
+  }, [hits, totalHits, page]);
 
   useEffect(() => {
     setPage(1);
@@ -31,7 +38,7 @@ export default function GalleryViewer({ query, getStatus }) {
 
   const makeRequest = async (query, page) => {
     try {
-      setLoading(true);
+      getStatus(true);
       const { hits, totalHits } = await fetchImages({ query, page });
 
       if (!totalHits) {
@@ -48,43 +55,32 @@ export default function GalleryViewer({ query, getStatus }) {
     } catch (error) {
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      getStatus(false);
     }
   };
-
-  useEffect(() => {
-    getStatus(loading);
-  }, [loading, getStatus]);
-
-  useEffect(() => {
-    if (page === 1 && totalHits) {
-      toast.success(`Hooray! We found ${totalHits} images.`);
-    } else if (hits.length === totalHits && totalHits) {
-      toast.info("We're sorry, but you've reached the end of search results.");
-    }
-  }, [hits, totalHits, page]);
 
   const loadMore = () => {
     setPage(prevState => prevState + 1);
   };
-
-  if (!hits.length && loading) {
-    return <Loader />;
-  }
 
   if (hits.length) {
     return (
       <>
         <ImageGallery hits={hits} />
         {hits.length < totalHits && (
-          <Button onClick={loadMore} status={loading} />
+          <Button onClick={loadMore} status={status} />
         )}
       </>
     );
+  }
+
+  if (status) {
+    return <Loader />;
   }
 }
 
 GalleryViewer.propTypes = {
   query: PropTypes.string.isRequired,
   getStatus: PropTypes.func.isRequired,
+  status: PropTypes.bool.isRequired,
 };
