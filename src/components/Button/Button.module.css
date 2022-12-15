@@ -24,3 +24,10 @@
 .button:focus {
   background-color: #303f9f;
 }
+
+.button:disabled {
+  color: #aaa;
+  background-color: #ddd;
+  opacity: 0.6;
+  cursor: default;
+}

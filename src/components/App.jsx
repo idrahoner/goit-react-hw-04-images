@@ -1,34 +1,34 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Searchbar from 'components/Searchbar';
-import ImageSearcher from 'components/ImageSearcher';
+import GalleryViewer from 'components/GalleryViewer';
 
-export class App extends Component {
-  state = {
-    query: '',
+export function App() {
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState(false);
+
+  const handleSearch = data => {
+    setQuery(data);
   };
 
-  handleSearch = data => {
-    this.setState({ query: data });
+  const getStatus = loading => {
+    setStatus(loading);
   };
 
-  render() {
-    // console.log('App this.state: ', this.state.query);
-    return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gridGap: '16px',
-          paddingBottom: '24px',
-        }}
-      >
-        <Searchbar onSubmit={this.handleSearch} />
-        <ImageSearcher query={this.state.query} />
-        <ToastContainer autoClose={3000} />
-      </div>
-    );
-  }
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gridGap: '16px',
+        paddingBottom: '24px',
+      }}
+    >
+      <Searchbar onSubmit={handleSearch} status={status} />
+      <GalleryViewer query={query} getStatus={getStatus} />
+      <ToastContainer autoClose={3000} />
+    </div>
+  );
 }

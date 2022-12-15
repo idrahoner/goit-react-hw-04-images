@@ -1,32 +1,36 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { HiOutlineXCircle } from 'react-icons/hi2';
 import css from './Modal.module.css';
 
 const ESCAPE_KEY = 'Escape';
 
+const modalPortal = document.querySelector('#modal-root');
+
 export default function Modal({ largeImage, description, onClose }) {
   useEffect(() => {
-    console.log('it`s useEffect()');
-    window.addEventListener('keydown', closeModal);
-  }, []);
+    const escapeModal = event => {
+      if (event.code === ESCAPE_KEY) {
+        event.preventDefault();
+        onClose();
+      }
+    };
 
-  // useEffect(() => {
-  //   return window.removeEventListener('keydown', closeModal);
-  // });
+    window.addEventListener('keydown', escapeModal);
+
+    return () => {
+      window.removeEventListener('keydown', escapeModal);
+    };
+  }, [onClose]);
 
   const closeModal = event => {
-    console.log('event: ', event);
-    console.log('event.code: ', event.code);
-    if (event.currentTarget === event.target || event.code === ESCAPE_KEY) {
-      event.preventDefault();
-      console.log('it`s condition in event');
-      window.removeEventListener('keydown', closeModal);
+    if (event.currentTarget === event.target) {
       onClose();
     }
   };
 
-  return (
+  return createPortal(
     <div className={css.overlay} onClick={closeModal}>
       <HiOutlineXCircle
         color="white"
@@ -41,12 +45,13 @@ export default function Modal({ largeImage, description, onClose }) {
       <div className={css.modal}>
         <img src={largeImage} alt={description} />
       </div>
-    </div>
+    </div>,
+    modalPortal
   );
 }
 
 Modal.propTypes = {
-  largeImage: PropTypes.string,
-  description: PropTypes.string,
-  onClose: PropTypes.func,
+  largeImage: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
 };

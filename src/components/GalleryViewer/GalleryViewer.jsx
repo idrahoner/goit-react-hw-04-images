@@ -1,55 +1,90 @@
 import { useState, useEffect } from 'react';
 import { PropTypes } from 'prop-types';
-import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 
+import Loader from 'components/Loader';
 import ImageGallery from 'components/ImageGallery';
-import Modal from 'components/Modal';
 import Button from 'components/Button';
+import { fetchImages, formatResponse } from 'service';
 
-const modalPortal = document.querySelector('#modal');
-
-export default function GalleryViewer({ hits, totalHits, onLoadMore }) {
-  const [modalElement, setModalElement] = useState(null);
+export default function GalleryViewer({ query, getStatus }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [hits, setHits] = useState([]);
+  const [totalHits, setTotalHits] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    toast.success(`Hooray! We found ${totalHits} images.`);
-  }, []);
+    setPage(1);
+    setHits([]);
+    setTotalHits(0);
+    setSearchQuery(query);
+  }, [query]);
 
   useEffect(() => {
-    if (hits.length === totalHits) {
+    if (!searchQuery) {
+      return;
+    }
+
+    makeRequest(searchQuery, page);
+  }, [searchQuery, page]);
+
+  const makeRequest = async (query, page) => {
+    try {
+      setLoading(true);
+      const { hits, totalHits } = await fetchImages({ query, page });
+
+      if (!totalHits) {
+        throw new Error(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+      }
+
+      setHits(prevState => [
+        ...prevState,
+        ...hits.map(element => formatResponse(element)),
+      ]);
+      setTotalHits(totalHits);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getStatus(loading);
+  }, [loading, getStatus]);
+
+  useEffect(() => {
+    if (page === 1 && totalHits) {
+      toast.success(`Hooray! We found ${totalHits} images.`);
+    } else if (hits.length === totalHits && totalHits) {
       toast.info("We're sorry, but you've reached the end of search results.");
     }
-  }, [hits]);
+  }, [hits, totalHits, page]);
 
-  const openModal = id => {
-    const modalElement = hits.find(element => element.id === Number(id));
-    setModalElement(modalElement);
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  const closeModal = () => {
-    setModalElement(null);
-  };
+  if (!hits.length && loading) {
+    return <Loader />;
+  }
 
-  return (
-    <>
-      <ImageGallery hits={hits} onClick={openModal} />
-      {hits.length < totalHits && <Button onClick={onLoadMore} />}
-      {modalElement &&
-        createPortal(
-          <Modal
-            largeImage={modalElement.largeImageURL}
-            description={modalElement.tags}
-            onClose={closeModal}
-          />,
-          modalPortal
+  if (hits.length) {
+    return (
+      <>
+        <ImageGallery hits={hits} />
+        {hits.length < totalHits && (
+          <Button onClick={loadMore} status={loading} />
         )}
-    </>
-  );
+      </>
+    );
+  }
 }
 
 GalleryViewer.propTypes = {
-  hits: PropTypes.array,
-  totalHits: PropTypes.number,
-  onLoadMore: PropTypes.func,
+  query: PropTypes.string.isRequired,
+  getStatus: PropTypes.func.isRequired,
 };
