@@ -7,7 +7,7 @@ import ImageGallery from 'components/ImageGallery';
 import Button from 'components/Button';
 import { fetchImages, formatResponse } from 'service';
 
-export default function GalleryViewer({ query, getStatus, status }) {
+export default function GalleryViewer({ query, setStatus, status }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [hits, setHits] = useState([]);
@@ -34,11 +34,12 @@ export default function GalleryViewer({ query, getStatus, status }) {
     }
 
     makeRequest(searchQuery, page);
+    // eslint-disable-next-line
   }, [searchQuery, page]);
 
-  const makeRequest = async (query, page) => {
+  async function makeRequest(query, page) {
     try {
-      getStatus(true);
+      setStatus(true);
       const { hits, totalHits } = await fetchImages({ query, page });
 
       if (!totalHits) {
@@ -55,9 +56,9 @@ export default function GalleryViewer({ query, getStatus, status }) {
     } catch (error) {
       toast.error(error.message);
     } finally {
-      getStatus(false);
+      setStatus(false);
     }
-  };
+  }
 
   const loadMore = () => {
     setPage(prevState => prevState + 1);
@@ -81,6 +82,6 @@ export default function GalleryViewer({ query, getStatus, status }) {
 
 GalleryViewer.propTypes = {
   query: PropTypes.string.isRequired,
-  getStatus: PropTypes.func.isRequired,
+  setStatus: PropTypes.func.isRequired,
   status: PropTypes.bool.isRequired,
 };

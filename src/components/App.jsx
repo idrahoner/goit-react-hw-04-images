@@ -13,10 +13,6 @@ export function App() {
     setQuery(data);
   };
 
-  const getStatus = loading => {
-    setStatus(loading);
-  };
-
   return (
     <div
       style={{
@@ -27,7 +23,7 @@ export function App() {
       }}
     >
       <Searchbar onSubmit={handleSearch} status={status} />
-      <GalleryViewer query={query} getStatus={getStatus} status={status} />
+      <GalleryViewer query={query} setStatus={setStatus} status={status} />
       <ToastContainer autoClose={3000} />
     </div>
   );
